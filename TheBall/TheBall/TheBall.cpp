@@ -3,6 +3,7 @@
 
 #include "framework.h"
 #include "TheBall.h"
+#include "Ball.h"
 
 #define MAX_LOADSTRING 100
 
@@ -10,12 +11,14 @@
 HINSTANCE hInst;                                // текущий экземпляр
 WCHAR szTitle[MAX_LOADSTRING];                  // Текст строки заголовка
 WCHAR szWindowClass[MAX_LOADSTRING];            // имя класса главного окна
+Ball ball;
 
 // Отправить объявления функций, включенных в этот модуль кода:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
+void SetDefaultsToBall(float Width, float Height);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -24,13 +27,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
-
+	
     // TODO: Разместите код здесь.
-
+	
     // Инициализация глобальных строк
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_THEBALL, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
+	SetDefaultsToBall(100, 100);
 
     // Выполнить инициализацию приложения:
     if (!InitInstance (hInstance, nCmdShow))
@@ -147,6 +151,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
             // TODO: Добавьте сюда любой код прорисовки, использующий HDC...
+			Ellipse(hdc, ball.getX(), ball.getY(), ball.getRadius(), ball.getRadius());
             EndPaint(hWnd, &ps);
         }
         break;
@@ -177,4 +182,11 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     }
     return (INT_PTR)FALSE;
+}
+
+void SetDefaultsToBall(float Width, float Height)
+{
+	ball.Initialization(Width * 0.5,
+		Height * 0.5,
+		min(Width * 0.02, Height * 0.02));
 }
