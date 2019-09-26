@@ -3,27 +3,22 @@
 #include <tchar.h>
 
 typedef struct ball {
-	int X;
-	int Y;
-	int Radius;
-	int Speed;
+	float X, Y, Radius;
+	float Speed;
 } Ball;
 
 // Global variables
 static TCHAR szWindowClass[] = _T("TheBall");
-
 static TCHAR szTitle[] = _T("The Ball");
-
 HINSTANCE hInst;
-
 Ball ball;
+int Timer = 1;
 
 // Forward declarations of functions included in this code module:
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-
 void InitializeBall(HWND);
-
 void DrawBall(HWND);
+
 
 int CALLBACK WinMain(
 	_In_ HINSTANCE hInstance,
@@ -42,7 +37,7 @@ int CALLBACK WinMain(
 	wcex.hInstance = hInstance;
 	wcex.hIcon = LoadIcon(hInstance, IDI_APPLICATION);
 	wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
-	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+	wcex.hbrBackground = CreateSolidBrush(RGB(63, 145, 109));
 	wcex.lpszMenuName = NULL;
 	wcex.lpszClassName = szWindowClass;
 	wcex.hIconSm = LoadIcon(wcex.hInstance, IDI_APPLICATION);
@@ -62,9 +57,9 @@ int CALLBACK WinMain(
 	HWND hWnd = CreateWindow(
 		szWindowClass,
 		szTitle,
-		WS_OVERLAPPEDWINDOW,
+		WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
 		CW_USEDEFAULT, CW_USEDEFAULT,
-		800, 400,
+		1000, 600,
 		NULL,
 		NULL,
 		hInstance,
@@ -102,12 +97,34 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_CREATE:
 		InitializeBall(hWnd);
+		SetTimer(hWnd, Timer, 10, NULL);
 		break;
 	case WM_DESTROY:
+		KillTimer(hWnd, 1);
 		PostQuitMessage(0);
 		break;
 	case WM_PAINT:
 		DrawBall(hWnd);
+		break;
+	case WM_TIMER:
+		InvalidateRect(hWnd, NULL, TRUE);
+		break;
+	case WM_KEYDOWN:
+		switch (wParam)
+		{
+		case VK_LEFT:
+			ball.X = ball.X - ball.Speed;
+			break;
+		case VK_RIGHT:
+			ball.X = ball.X + ball.Speed;
+			break;
+		case VK_UP:
+			ball.Y = ball.Y - ball.Speed;
+			break;
+		case VK_DOWN:
+			ball.Y = ball.Y + ball.Speed;
+			break;
+		}
 		break;
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
@@ -125,8 +142,8 @@ void InitializeBall(HWND hWnd)
 	int wndHeight = rect.bottom - rect.top;
 	ball.X = wndWidth / 2;
 	ball.Y = wndHeight / 2;
-	ball.Radius = wndHeight / 20;
-	ball.Speed = 5;
+	ball.Radius = wndHeight / 30;
+	ball.Speed = 3;
 }
 
 void DrawBall(HWND hWnd)
