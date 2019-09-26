@@ -2,22 +2,41 @@
 #include <stdlib.h>
 #include <tchar.h>
 
+
+////////////////////////////////
+// User types
+enum Direction { LEFT, RIGHT, UP, DOWN, NONE };
+
 typedef struct ball {
 	float X, Y, Radius;
-	float Speed;
+	float Speed, Boost;
 } Ball;
 
+
+////////////////////////////////
 // Global variables
+//
+constexpr auto WND_WIDTH = 1000.0;
+constexpr auto WND_HEIGHT = 600.0;
+constexpr auto BOOST = 0.5;
+constexpr auto COUNTER_BOOST = -0.5;
+
 static TCHAR szWindowClass[] = _T("TheBall");
 static TCHAR szTitle[] = _T("The Ball");
 HINSTANCE hInst;
 Ball ball;
-int Timer = 1;
+Direction direction = NONE;
+BOOL wallHitten = FALSE;
+int timer = 1;
 
+
+////////////////////////////////
 // Forward declarations of functions included in this code module:
+//
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 void InitializeBall(HWND);
 void DrawBall(HWND);
+void RecalculateBallPosition(Direction);
 
 
 int CALLBACK WinMain(
@@ -59,7 +78,8 @@ int CALLBACK WinMain(
 		szTitle,
 		WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
 		CW_USEDEFAULT, CW_USEDEFAULT,
-		1000, 600,
+		(int)WND_WIDTH,
+		(int)WND_HEIGHT,
 		NULL,
 		NULL,
 		hInstance,
@@ -96,8 +116,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	switch (message)
 	{
 	case WM_CREATE:
+		direction = NONE;
 		InitializeBall(hWnd);
-		SetTimer(hWnd, Timer, 10, NULL);
+		SetTimer(hWnd, timer, 1, NULL);
 		break;
 	case WM_DESTROY:
 		KillTimer(hWnd, 1);
@@ -107,24 +128,37 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		DrawBall(hWnd);
 		break;
 	case WM_TIMER:
+		if (ball.Speed + ball.Boost >= 0) { 
+			ball.Speed = ball.Speed + ball.Boost;
+		} 
+		else {
+			ball.Speed = 0.0;
+			ball.Boost = 0.0;
+			direction = NONE;
+		}
+		RecalculateBallPosition(direction);
 		InvalidateRect(hWnd, NULL, TRUE);
 		break;
 	case WM_KEYDOWN:
+		ball.Boost = BOOST;
 		switch (wParam)
 		{
 		case VK_LEFT:
-			ball.X = ball.X - ball.Speed;
+			direction = LEFT;
 			break;
 		case VK_RIGHT:
-			ball.X = ball.X + ball.Speed;
+			direction = RIGHT;
 			break;
 		case VK_UP:
-			ball.Y = ball.Y - ball.Speed;
+			direction = UP;
 			break;
 		case VK_DOWN:
-			ball.Y = ball.Y + ball.Speed;
+			direction = DOWN;
 			break;
 		}
+		break;
+	case WM_KEYUP:
+		ball.Boost = COUNTER_BOOST;
 		break;
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
@@ -136,14 +170,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 void InitializeBall(HWND hWnd)
 {
-	RECT rect;
-	BOOL result = GetWindowRect(hWnd, &rect);
-	int wndWidth = rect.right - rect.left;
-	int wndHeight = rect.bottom - rect.top;
-	ball.X = wndWidth / 2;
-	ball.Y = wndHeight / 2;
-	ball.Radius = wndHeight / 30;
-	ball.Speed = 3;
+	ball.X = WND_WIDTH / 2;
+	ball.Y = WND_HEIGHT / 2;
+	ball.Radius = WND_HEIGHT / 30;
+	ball.Speed = 0.0;
+	ball.Boost = 0.0;
 }
 
 void DrawBall(HWND hWnd)
@@ -151,6 +182,27 @@ void DrawBall(HWND hWnd)
 	HDC hdc;
 	PAINTSTRUCT ps;
 	hdc = BeginPaint(hWnd, &ps);
-	Ellipse(hdc, ball.X - ball.Radius, ball.Y - ball.Radius, ball.X + ball.Radius, ball.Y + ball.Radius);
+	Ellipse(hdc, (int)(ball.X - ball.Radius), (int)(ball.Y - ball.Radius), (int)(ball.X + ball.Radius), (int)(ball.Y + ball.Radius));
 	EndPaint(hWnd, &ps);
+}
+
+void RecalculateBallPosition(Direction direction)
+{
+	switch (direction)
+	{
+	case LEFT:
+		ball.X = ball.X - ball.Speed;
+		break;
+	case RIGHT:
+		ball.X = ball.X + ball.Speed;
+		break;
+	case UP:
+		ball.Y = ball.Y - ball.Speed;
+		break;
+	case DOWN:
+		ball.Y = ball.Y + ball.Speed;
+		break;
+	case NONE:
+		break;
+	}
 }
