@@ -2,13 +2,28 @@
 #include <stdlib.h>
 #include <tchar.h>
 
+typedef struct ball {
+	int X;
+	int Y;
+	int Radius;
+	int Speed;
+} Ball;
+
 // Global variables
-static TCHAR szWindowClass[] = _T("ThaBall");
-static TCHAR szTitle[] = _T("Tha Ball");
+static TCHAR szWindowClass[] = _T("TheBall");
+
+static TCHAR szTitle[] = _T("The Ball");
+
 HINSTANCE hInst;
+
+Ball ball;
 
 // Forward declarations of functions included in this code module:
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
+
+void InitializeBall(HWND);
+
+void DrawBall(HWND);
 
 int CALLBACK WinMain(
 	_In_ HINSTANCE hInstance,
@@ -82,12 +97,17 @@ int CALLBACK WinMain(
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	PAINTSTRUCT ps;
-	HDC hdc;
 
 	switch (message)
 	{
+	case WM_CREATE:
+		InitializeBall(hWnd);
+		break;
 	case WM_DESTROY:
 		PostQuitMessage(0);
+		break;
+	case WM_PAINT:
+		DrawBall(hWnd);
 		break;
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
@@ -95,4 +115,25 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	}
 
 	return 0;
+}
+
+void InitializeBall(HWND hWnd)
+{
+	RECT rect;
+	BOOL result = GetWindowRect(hWnd, &rect);
+	int wndWidth = rect.right - rect.left;
+	int wndHeight = rect.bottom - rect.top;
+	ball.X = wndWidth / 2;
+	ball.Y = wndHeight / 2;
+	ball.Radius = wndHeight / 20;
+	ball.Speed = 5;
+}
+
+void DrawBall(HWND hWnd)
+{
+	HDC hdc;
+	PAINTSTRUCT ps;
+	hdc = BeginPaint(hWnd, &ps);
+	Ellipse(hdc, ball.X - ball.Radius, ball.Y - ball.Radius, ball.X + ball.Radius, ball.Y + ball.Radius);
+	EndPaint(hWnd, &ps);
 }
