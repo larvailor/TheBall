@@ -5,11 +5,15 @@
 
 ////////////////////////////////
 // User types
-enum Direction { LEFT, RIGHT, UP, DOWN, NONE };
+enum DirectionX { LEFT, RIGHT, NONE_X };
+enum DirectionY { UP, DOWN, NONE_Y };
 
 typedef struct ball {
 	float X, Y, Radius;
-	float Speed, Boost;
+	float SpeedX, SpeedY;
+	float BoostX, BoostY;
+	DirectionX directionX;
+	DirectionY directionY;
 } Ball;
 
 
@@ -18,14 +22,17 @@ typedef struct ball {
 //
 constexpr auto WND_WIDTH = 1000.0;
 constexpr auto WND_HEIGHT = 600.0;
-constexpr auto BOOST = 0.5;
-constexpr auto COUNTER_BOOST = -0.5;
+constexpr auto BOOST_LEFT = -0.5;
+constexpr auto BOOST_RIGHT = 0.5;
+constexpr auto BOOST_UP = -0.5;
+constexpr auto BOOST_DOWN = 0.5;
+constexpr auto ALLOWED_FAULT = 0.3;
+constexpr auto COUNTER_BOOST_PERCENTAGE = 0.25;
 
 static TCHAR szWindowClass[] = _T("TheBall");
 static TCHAR szTitle[] = _T("The Ball");
 HINSTANCE hInst;
 Ball ball;
-Direction direction = NONE;
 BOOL wallHitten = FALSE;
 int timer = 1;
 
@@ -36,7 +43,8 @@ int timer = 1;
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 void InitializeBall(HWND);
 void DrawBall(HWND);
-void RecalculateBallPosition(Direction);
+void RecalculateBallSpeed();
+void RecalculateBallPosition();
 
 
 int CALLBACK WinMain(
@@ -116,7 +124,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	switch (message)
 	{
 	case WM_CREATE:
-		direction = NONE;
 		InitializeBall(hWnd);
 		SetTimer(hWnd, timer, 1, NULL);
 		break;
@@ -128,37 +135,43 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		DrawBall(hWnd);
 		break;
 	case WM_TIMER:
-		if (ball.Speed + ball.Boost >= 0) { 
-			ball.Speed = ball.Speed + ball.Boost;
-		} 
-		else {
-			ball.Speed = 0.0;
-			ball.Boost = 0.0;
-			direction = NONE;
-		}
-		RecalculateBallPosition(direction);
+		RecalculateBallSpeed();
+		RecalculateBallPosition();
 		InvalidateRect(hWnd, NULL, TRUE);
 		break;
 	case WM_KEYDOWN:
-		ball.Boost = BOOST;
-		switch (wParam)
-		{
+		switch (wParam) {
 		case VK_LEFT:
-			direction = LEFT;
+			ball.BoostX = BOOST_LEFT;
+			ball.directionX = LEFT;
 			break;
 		case VK_RIGHT:
-			direction = RIGHT;
+			ball.BoostX = BOOST_RIGHT;
+			ball.directionX = RIGHT;
 			break;
 		case VK_UP:
-			direction = UP;
+			ball.BoostY = BOOST_UP;
+			ball.directionY = UP;
 			break;
 		case VK_DOWN:
-			direction = DOWN;
+			ball.BoostY = BOOST_DOWN;
+			ball.directionY = DOWN;
 			break;
 		}
 		break;
 	case WM_KEYUP:
-		ball.Boost = COUNTER_BOOST;
+		switch (wParam) {
+		case VK_LEFT:
+		case VK_RIGHT:
+			ball.BoostX *= (-1) * COUNTER_BOOST_PERCENTAGE;
+			ball.directionX = NONE_X;
+			break;
+		case VK_UP:
+		case VK_DOWN:
+			ball.BoostY *= (-1) * COUNTER_BOOST_PERCENTAGE;
+			ball.directionY = NONE_Y;
+			break;
+		}
 		break;
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
@@ -173,8 +186,12 @@ void InitializeBall(HWND hWnd)
 	ball.X = WND_WIDTH / 2;
 	ball.Y = WND_HEIGHT / 2;
 	ball.Radius = WND_HEIGHT / 30;
-	ball.Speed = 0.0;
-	ball.Boost = 0.0;
+	ball.SpeedX = 0.0;
+	ball.SpeedY = 0.0;
+	ball.BoostX = 0.0;
+	ball.BoostY = 0.0;
+	ball.directionX = NONE_X;
+	ball.directionY = NONE_Y;
 }
 
 void DrawBall(HWND hWnd)
@@ -186,23 +203,27 @@ void DrawBall(HWND hWnd)
 	EndPaint(hWnd, &ps);
 }
 
-void RecalculateBallPosition(Direction direction)
+void RecalculateBallSpeed()
 {
-	switch (direction)
-	{
-	case LEFT:
-		ball.X = ball.X - ball.Speed;
-		break;
-	case RIGHT:
-		ball.X = ball.X + ball.Speed;
-		break;
-	case UP:
-		ball.Y = ball.Y - ball.Speed;
-		break;
-	case DOWN:
-		ball.Y = ball.Y + ball.Speed;
-		break;
-	case NONE:
-		break;
+	if (ball.directionX == NONE_X) {
+		if (ball.SpeedX > (-1) * ALLOWED_FAULT && ball.SpeedX < ALLOWED_FAULT) {
+			ball.SpeedX = 0.0;
+			ball.BoostX = 0.0;
+		}
 	}
+	ball.SpeedX += ball.BoostX;
+
+	if (ball.directionY == NONE_Y) {
+		if (ball.SpeedY > (-1) * ALLOWED_FAULT && ball.SpeedY < ALLOWED_FAULT) {
+			ball.SpeedY = 0.0;
+			ball.BoostY = 0.0;
+		}
+	}
+	ball.SpeedY += ball.BoostY;
+}
+
+void RecalculateBallPosition()
+{
+	ball.X += ball.SpeedX;
+	ball.Y += ball.SpeedY;
 }
