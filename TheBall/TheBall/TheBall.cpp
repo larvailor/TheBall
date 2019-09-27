@@ -46,6 +46,10 @@ void DrawBall(HWND);
 void RecalculateBallSpeed();
 void RecalculateBallPosition();
 
+BOOL LeftHitten();
+BOOL RightHitten();
+BOOL TopHitten();
+BOOL BottomHitten();
 
 int CALLBACK WinMain(
 	_In_ HINSTANCE hInstance,
@@ -224,6 +228,34 @@ void RecalculateBallSpeed()
 
 void RecalculateBallPosition()
 {
+	if (LeftHitten() || RightHitten()) {
+		ball.SpeedX *= -1;
+		ball.BoostX *= -1;
+	}
+	if (TopHitten() || BottomHitten()) {
+		ball.SpeedY *= -1;
+		ball.BoostY *= -1;
+	}
 	ball.X += ball.SpeedX;
 	ball.Y += ball.SpeedY;
+}
+
+BOOL LeftHitten()
+{
+	if (ball.X - ball.Radius <= 0) { return TRUE; }	else { return FALSE; }
+}
+
+BOOL RightHitten()
+{
+	if (ball.X + ball.Radius >= WND_WIDTH) { return TRUE; }	else { return FALSE; }
+}
+
+BOOL TopHitten()
+{
+	if (ball.Y - ball.Radius <= 0) { return TRUE; }	else { return FALSE; }
+}
+
+BOOL BottomHitten()
+{
+	if (ball.Y + ball.Radius >= WND_HEIGHT) { return TRUE; } else { return FALSE; }
 }
