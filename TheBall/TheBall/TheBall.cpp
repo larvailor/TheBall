@@ -36,7 +36,8 @@ int timer = 1;
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 void InitializeBall(HWND);
 void DrawBall(HWND);
-void RecalculateBallPosition(Direction);
+void RecalculateBallSpeed();
+void RecalculateBallPosition();
 
 
 int CALLBACK WinMain(
@@ -128,15 +129,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		DrawBall(hWnd);
 		break;
 	case WM_TIMER:
-		if (ball.Speed + ball.Boost >= 0) { 
-			ball.Speed = ball.Speed + ball.Boost;
-		} 
-		else {
-			ball.Speed = 0.0;
-			ball.Boost = 0.0;
-			direction = NONE;
-		}
-		RecalculateBallPosition(direction);
+		RecalculateBallSpeed();
+		RecalculateBallPosition();
 		InvalidateRect(hWnd, NULL, TRUE);
 		break;
 	case WM_KEYDOWN:
@@ -186,7 +180,19 @@ void DrawBall(HWND hWnd)
 	EndPaint(hWnd, &ps);
 }
 
-void RecalculateBallPosition(Direction direction)
+void RecalculateBallSpeed()
+{
+	if (ball.Speed + ball.Boost >= 0) {
+		ball.Speed = ball.Speed + ball.Boost;
+	}
+	else {
+		ball.Speed = 0.0;
+		ball.Boost = 0.0;
+		direction = NONE;
+	}
+}
+
+void RecalculateBallPosition()
 {
 	switch (direction)
 	{
