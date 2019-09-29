@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <stdlib.h>
 #include <tchar.h>
+#include "resource.h"
 
 
 ////////////////////////////////
@@ -27,7 +28,7 @@ constexpr auto BOOST_RIGHT = 0.5;
 constexpr auto BOOST_UP = -0.5;
 constexpr auto BOOST_DOWN = 0.5;
 constexpr auto ALLOWED_FAULT = 0.3;
-constexpr auto COUNTER_BOOST_PERCENTAGE = 0.25;
+constexpr auto COUNTER_BOOST_PERCENTAGE = 0.5;
 
 static TCHAR szWindowClass[] = _T("TheBall");
 static TCHAR szTitle[] = _T("The Ball");
@@ -35,21 +36,26 @@ HINSTANCE hInst;
 Ball ball;
 BOOL wallHitten = FALSE;
 int timer = 1;
-
+HBITMAP hBmpBall;
 
 ////////////////////////////////
 // Forward declarations of functions included in this code module:
 //
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-void InitializeBall(HWND);
-void DrawBall(HWND);
-void RecalculateBallSpeed();
-void RecalculateBallPosition();
-
 BOOL LeftHitten();
 BOOL RightHitten();
 BOOL TopHitten();
 BOOL BottomHitten();
+
+void LoadResources();
+void InitializeBall(HWND);
+
+void DrawBall(HWND);
+BOOL DrawBitmap(HDC hDc, int x, int y, HBITMAP hBitmap);
+
+void RecalculateBallSpeed();
+void RecalculateBallPosition();
+
 
 int CALLBACK WinMain(
 	_In_ HINSTANCE hInstance,
@@ -128,6 +134,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	switch (message)
 	{
 	case WM_CREATE:
+		LoadResources();
 		InitializeBall(hWnd);
 		SetTimer(hWnd, timer, 1, NULL);
 		break;
@@ -185,11 +192,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
+void LoadResources()
+{
+	hBmpBall = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_BITMAP1));
+}
+
 void InitializeBall(HWND hWnd)
 {
+	BITMAP bmp;
+	GetObject(hBmpBall, sizeof(BITMAP), (LPSTR)& bmp);
 	ball.X = WND_WIDTH / 2;
 	ball.Y = WND_HEIGHT / 2;
-	ball.Radius = WND_HEIGHT / 30;
+	ball.Radius = bmp.bmWidth / 2;
 	ball.SpeedX = 0.0;
 	ball.SpeedY = 0.0;
 	ball.BoostX = 0.0;
@@ -203,8 +217,44 @@ void DrawBall(HWND hWnd)
 	HDC hdc;
 	PAINTSTRUCT ps;
 	hdc = BeginPaint(hWnd, &ps);
-	Ellipse(hdc, (int)(ball.X - ball.Radius), (int)(ball.Y - ball.Radius), (int)(ball.X + ball.Radius), (int)(ball.Y + ball.Radius));
+	DrawBitmap(hdc, ball.X - ball.Radius, ball.Y - ball.Radius, hBmpBall);
 	EndPaint(hWnd, &ps);
+}
+
+BOOL DrawBitmap(HDC hDC, int x, int y, HBITMAP hBitmap)
+{
+	HBITMAP hBmp, hBmpOld;
+	HDC hMemDC;
+	BITMAP bmp;
+	POINT ptSize, ptOrg;
+
+	hMemDC = CreateCompatibleDC(hDC); // creating memory context, that is compatible with hDC
+	if (hMemDC == NULL) {
+		return FALSE;
+	}
+
+
+	hBmpOld = (HBITMAP)SelectObject(hMemDC, hBitmap); // select image into the context	
+													  // this function returns ID of the BMP that was loaded into the memory context earlier
+	if (!hBmpOld) {
+		return FALSE;
+	}
+
+	SetMapMode(hMemDC, GetMapMode(hDC)); // synchronizing of the memory context and showing context
+	GetObject(hBitmap, sizeof(BITMAP), (LPSTR)& bmp);
+	
+	ptSize.x = bmp.bmWidth;
+	ptSize.y = bmp.bmHeight;
+	DPtoLP(hDC, &ptSize, 1); // convert units into logical units
+
+	ptOrg.x = 0;
+	ptOrg.y = 0;
+	DPtoLP(hDC, &ptSize, 1); 
+
+	BitBlt(hDC, x, y, ptSize.x, ptSize.y, hMemDC, ptOrg.x, ptOrg.y, SRCCOPY);
+
+	SelectObject(hMemDC, hBmpOld); // restore memory context
+	DeleteObject(hMemDC);
 }
 
 void RecalculateBallSpeed()
