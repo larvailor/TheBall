@@ -131,8 +131,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	PAINTSTRUCT ps;
 
-	switch (message)
-	{
+	switch (message) {
 	case WM_CREATE:
 		LoadResources();
 		InitializeBall(hWnd);
@@ -217,7 +216,13 @@ void DrawBall(HWND hWnd)
 	HDC hdc;
 	PAINTSTRUCT ps;
 	hdc = BeginPaint(hWnd, &ps);
-	DrawBitmap(hdc, ball.X - ball.Radius, ball.Y - ball.Radius, hBmpBall);
+	BOOL result = DrawBitmap(hdc, ball.X - ball.Radius, ball.Y - ball.Radius, hBmpBall);
+	if (result == FALSE) {
+		MessageBox(NULL,
+			_T("Call to DrawBitmap failed!"),
+			_T("Windows Desktop Guided Tour"),
+			NULL);
+	}
 	EndPaint(hWnd, &ps);
 }
 

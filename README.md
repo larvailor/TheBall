@@ -1,1 +1,4 @@
-Tmp text to README
+#TheBall
+
+App that demonstrates basic ideas of working with WinApi
+
