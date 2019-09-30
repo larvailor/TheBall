@@ -97,52 +97,26 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_KEYDOWN:
 		switch (wParam) {
 		case VK_LEFT:
-			ball.directionX = LEFT;
-			ball.SpeedX = START_SPEED;
-			ball.BoostX = BOOST;
+			SetUpLeftHit();
 			break;
 		case VK_RIGHT:
-			ball.directionX = RIGHT;
-			ball.SpeedX = START_SPEED;
-			ball.BoostX = BOOST;
+			SetUpRightHit();
 			break;
 		case VK_UP:
-			ball.directionY = UP;
-			ball.SpeedY = START_SPEED;
-			ball.BoostY = BOOST;
+			SetUpUpHit();
 			break;
 		case VK_DOWN:
-			ball.directionY = DOWN;
-			ball.SpeedY = START_SPEED;
-			ball.BoostY = BOOST;
+			SetUpDownHit();
 			break;
 		}
 		break;
 	case WM_MOUSEWHEEL:
 		switch (GET_KEYSTATE_WPARAM(wParam)) {
 		case MK_SHIFT:
-			if (GET_WHEEL_DELTA_WPARAM(wParam) > 0) {
-				ball.directionX = RIGHT;
-				ball.SpeedX = START_SPEED;
-				ball.BoostX = BOOST;
-			}
-			else {
-				ball.directionX = LEFT;
-				ball.SpeedX = START_SPEED;
-				ball.BoostX = BOOST;
-			}
+			if (GET_WHEEL_DELTA_WPARAM(wParam) > 0) { SetUpRightHit(); } else { SetUpLeftHit(); }
 			break;
 		default:
-			if (GET_WHEEL_DELTA_WPARAM(wParam) > 0) {
-				ball.directionY = UP;
-				ball.SpeedY = START_SPEED;
-				ball.BoostY = BOOST;
-			}
-			else {
-				ball.directionY = DOWN;
-				ball.SpeedY = START_SPEED;
-				ball.BoostY = BOOST;
-			}
+			if (GET_WHEEL_DELTA_WPARAM(wParam) > 0) { SetUpUpHit(); } else { SetUpDownHit(); }
 			break;
 		}
 		break;
@@ -273,6 +247,34 @@ void RecalculateBallPosition()
 	case NONE_Y:
 		break;
 	}
+}
+
+void SetUpLeftHit()
+{
+	ball.directionX = LEFT;
+	ball.SpeedX = START_SPEED;
+	ball.BoostX = BOOST;
+}
+
+void SetUpRightHit()
+{
+	ball.directionX = RIGHT;
+	ball.SpeedX = START_SPEED;
+	ball.BoostX = BOOST;
+}
+
+void SetUpUpHit()
+{
+	ball.directionY = UP;
+	ball.SpeedY = START_SPEED;
+	ball.BoostY = BOOST;
+}
+
+void SetUpDownHit()
+{
+	ball.directionY = DOWN;
+	ball.SpeedY = START_SPEED;
+	ball.BoostY = BOOST;
 }
 
 BOOL LeftHitten()
