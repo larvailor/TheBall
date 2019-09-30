@@ -1,60 +1,5 @@
-#include <windows.h>
-#include <stdlib.h>
-#include <tchar.h>
+#include "TheBall.h"
 #include "resource.h"
-
-
-////////////////////////////////
-// User types
-enum DirectionX { LEFT, RIGHT, NONE_X };
-enum DirectionY { UP, DOWN, NONE_Y };
-
-typedef struct ball {
-	float X, Y, Radius;
-	float SpeedX, SpeedY;
-	float BoostX, BoostY;
-	DirectionX directionX;
-	DirectionY directionY;
-} Ball;
-
-
-////////////////////////////////
-// Global variables
-//
-constexpr auto WND_WIDTH = 1000.0;
-constexpr auto WND_HEIGHT = 600.0;
-constexpr auto BOOST_LEFT = -0.5;
-constexpr auto BOOST_RIGHT = 0.5;
-constexpr auto BOOST_UP = -0.5;
-constexpr auto BOOST_DOWN = 0.5;
-constexpr auto ALLOWED_FAULT = 0.3;
-constexpr auto COUNTER_BOOST_PERCENTAGE = 0.5;
-
-static TCHAR szWindowClass[] = _T("TheBall");
-static TCHAR szTitle[] = _T("The Ball");
-HINSTANCE hInst;
-Ball ball;
-BOOL wallHitten = FALSE;
-int timer = 1;
-HBITMAP hBmpBall;
-
-////////////////////////////////
-// Forward declarations of functions included in this code module:
-//
-LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-BOOL LeftHitten();
-BOOL RightHitten();
-BOOL TopHitten();
-BOOL BottomHitten();
-
-void LoadResources();
-void InitializeBall(HWND);
-
-void DrawBall(HWND);
-BOOL DrawBitmap(HDC hDc, int x, int y, HBITMAP hBitmap);
-
-void RecalculateBallSpeed();
-void RecalculateBallPosition();
 
 
 int CALLBACK WinMain(
@@ -152,34 +97,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_KEYDOWN:
 		switch (wParam) {
 		case VK_LEFT:
-			ball.BoostX = BOOST_LEFT;
 			ball.directionX = LEFT;
+			ball.SpeedX = START_SPEED;
+			ball.BoostX = BOOST;
 			break;
 		case VK_RIGHT:
-			ball.BoostX = BOOST_RIGHT;
 			ball.directionX = RIGHT;
+			ball.SpeedX = START_SPEED;
+			ball.BoostX = BOOST;
 			break;
 		case VK_UP:
-			ball.BoostY = BOOST_UP;
 			ball.directionY = UP;
+			ball.SpeedY = START_SPEED;
+			ball.BoostY = BOOST;
 			break;
 		case VK_DOWN:
-			ball.BoostY = BOOST_DOWN;
 			ball.directionY = DOWN;
-			break;
-		}
-		break;
-	case WM_KEYUP:
-		switch (wParam) {
-		case VK_LEFT:
-		case VK_RIGHT:
-			ball.BoostX *= (-1) * COUNTER_BOOST_PERCENTAGE;
-			ball.directionX = NONE_X;
-			break;
-		case VK_UP:
-		case VK_DOWN:
-			ball.BoostY *= (-1) * COUNTER_BOOST_PERCENTAGE;
-			ball.directionY = NONE_Y;
+			ball.SpeedY = START_SPEED;
+			ball.BoostY = BOOST;
 			break;
 		}
 		break;
@@ -264,35 +199,52 @@ BOOL DrawBitmap(HDC hDC, int x, int y, HBITMAP hBitmap)
 
 void RecalculateBallSpeed()
 {
-	if (ball.directionX == NONE_X) {
+	if (ball.directionX != NONE_X) {
+		ball.SpeedX = ball.SpeedX - ball.BoostX;
 		if (ball.SpeedX > (-1) * ALLOWED_FAULT && ball.SpeedX < ALLOWED_FAULT) {
 			ball.SpeedX = 0.0;
 			ball.BoostX = 0.0;
+			ball.directionX = NONE_X;
 		}
 	}
-	ball.SpeedX += ball.BoostX;
 
-	if (ball.directionY == NONE_Y) {
+	if (ball.directionY != NONE_Y) {
+		ball.SpeedY = ball.SpeedY - ball.BoostY;
 		if (ball.SpeedY > (-1) * ALLOWED_FAULT && ball.SpeedY < ALLOWED_FAULT) {
 			ball.SpeedY = 0.0;
 			ball.BoostY = 0.0;
+			ball.directionY = NONE_Y;
 		}
 	}
-	ball.SpeedY += ball.BoostY;
 }
 
 void RecalculateBallPosition()
 {
-	if (LeftHitten() || RightHitten()) {
-		ball.SpeedX *= -1;
-		ball.BoostX *= -1;
+	switch (ball.directionX) {
+	case LEFT:
+		ball.X -= ball.SpeedX - ball.BoostX / 2;
+		if (LeftHitten()) {	ball.directionX = RIGHT; }
+		break;
+	case RIGHT:
+		ball.X += ball.SpeedX - ball.BoostX / 2;
+		if (RightHitten()) { ball.directionX = LEFT; }
+		break;
+	case NONE_X:
+		break;
 	}
-	if (TopHitten() || BottomHitten()) {
-		ball.SpeedY *= -1;
-		ball.BoostY *= -1;
+
+	switch (ball.directionY) {
+	case UP:
+		ball.Y -= ball.SpeedY - ball.BoostY / 2;
+		if (TopHitten()) { ball.directionY = DOWN; }
+		break;
+	case DOWN:
+		ball.Y += ball.SpeedY - ball.BoostY / 2;
+		if (BottomHitten()) { ball.directionY = UP; }
+		break;
+	case NONE_Y:
+		break;
 	}
-	ball.X += ball.SpeedX;
-	ball.Y += ball.SpeedY;
 }
 
 BOOL LeftHitten()
