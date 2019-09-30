@@ -118,6 +118,34 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			break;
 		}
 		break;
+	case WM_MOUSEWHEEL:
+		switch (GET_KEYSTATE_WPARAM(wParam)) {
+		case MK_SHIFT:
+			if (GET_WHEEL_DELTA_WPARAM(wParam) > 0) {
+				ball.directionX = RIGHT;
+				ball.SpeedX = START_SPEED;
+				ball.BoostX = BOOST;
+			}
+			else {
+				ball.directionX = LEFT;
+				ball.SpeedX = START_SPEED;
+				ball.BoostX = BOOST;
+			}
+			break;
+		default:
+			if (GET_WHEEL_DELTA_WPARAM(wParam) > 0) {
+				ball.directionY = UP;
+				ball.SpeedY = START_SPEED;
+				ball.BoostY = BOOST;
+			}
+			else {
+				ball.directionY = DOWN;
+				ball.SpeedY = START_SPEED;
+				ball.BoostY = BOOST;
+			}
+			break;
+		}
+		break;
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
 		break;
