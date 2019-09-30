@@ -36,6 +36,11 @@ constexpr auto ALLOWED_FAULT = 1.0;
 // Forward declarations of functions included in this code module:
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
+void SetUpLeftHit();
+void SetUpRightHit();
+void SetUpUpHit();
+void SetUpDownHit();
+
 BOOL LeftHitten();
 BOOL RightHitten();
 BOOL TopHitten();
