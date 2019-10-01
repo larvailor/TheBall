@@ -193,7 +193,7 @@ BOOL DrawBitmap(HDC hDC, int x, int y, HBITMAP hBitmap)
 	ptOrg.y = 0;
 	DPtoLP(hDC, &ptSize, 1); 
 
-	BitBlt(hDC, x, y, ptSize.x, ptSize.y, hMemDC, ptOrg.x, ptOrg.y, SRCCOPY);
+	TransparentBlt(hDC, x, y, ptSize.x, ptSize.y, hMemDC, ptOrg.x, ptOrg.y, ptSize.x, ptSize.y, RGB(255, 255, 255));
 
 	SelectObject(hMemDC, hBmpOld); // restore memory context
 	DeleteObject(hMemDC);
